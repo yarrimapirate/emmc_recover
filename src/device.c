@@ -50,6 +50,7 @@ int qdload_device_connected(void) {
 
 }
 
+#define max_wt 200000  // Wait approx 20 seconds
 int wait_device(const char* device) {
 
 	if (check_file(device)) {
@@ -59,7 +60,9 @@ int wait_device(const char* device) {
 	}
 
 	printf("Waiting device %s.......\n", device);
-
+	fflush(stdout);
+	
+	int wt = 0;
 	while(1) {
 		usleep(1);
 		if (check_file(device)) {
@@ -67,6 +70,14 @@ int wait_device(const char* device) {
 			fflush(stdout);
 			return 1;
 		}
+		// Test if process has stalled.  Try to wake up device if so.
+		if (wt == max_wt) {
+			printf("Timeout!  Resetting Device.\n");
+			fflush(stdout);
+			reset_device_pbl();
+			wt=0;
+		}
+		wt++;
 	}
 
 }
